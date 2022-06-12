@@ -42,6 +42,8 @@
     <node name="gazebo_gui" pkg="gazebo_ros" type="gzclient" respawn="false" output="screen"/>
   </group> 
 
+
+
   <!-- <include file="$(find exprob_assignment3)/launch/gazebo.launch"></include> -->
   <include file="$(find moveit_test_nocollision)/launch/demo_gazebo.launch"></include>
   
@@ -92,6 +94,12 @@
     <rosparam file="$(find planning)/param/move_base_params.yaml" command="load"/>
   </node>
   
-    <node pkg="aruco_ros" type="marker_publisher" name="marker_publisher" args="/image:=/robot/camera1/image_raw" output="screen"/>
-
+  <!-- node for the detection of the aruco -->
+    <node pkg="aruco_ros" type="marker_publisher" name="marker_publisher" args="/image:=/robot/camera1/image_raw" />
+    
+    <!-- node armor -->
+   <!--<node pkg="armor" type="execute" name="armor_service" args="it.emarolab.armor.ARMORMainService"/>-->
+   
+  <!-- node for the detection of the aruco -->
+    <node pkg="exprob_assignment3" type="final_oracle" name="final_oracle" output="screen"/>
 </launch>
