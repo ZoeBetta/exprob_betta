@@ -49,7 +49,7 @@ import rospy
 from std_msgs.msg import String, Int32
 from armor_msgs.msg import * 
 from armor_msgs.srv import * 
-from exprob_assignment3.srv import Marker
+from exprob_assignment3.srv import Marker, MarkerResponse
 #from exprob_assignment2.srv import HintElaboration
 #from exprob_assignment2.srv import Complete,CompleteResponse
 #from exprob_assignment2.srv import Results, ResultsResponse
@@ -73,13 +73,18 @@ oracle_service = None
 def newId (idtocheck):
     global oracle_service
     found=0
+    req=Marker()
     for x in retrievedId:
         if (x==idtocheck.data):
             found=1
     if found==0:
         retrievedId.append(idtocheck.data)
-        hint=oracle_service(idtocheck.data)
-        print(hint)
+        if (idtocheck.data>10) and (idtocheck.data<41):
+            req=idtocheck.data
+            hint=oracle_service(req)
+            print(hint.oracle_hint)
+        else:
+            print("id out of range")
 
 ##
 #	\brief This function implements the ros node
@@ -99,7 +104,7 @@ def main():
   # waits for the service to be correctly running
   #rospy.wait_for_service('armor_interface_srv')
   #definition for the Client  on the topic /oracle_hint
-  oracle_service = rospy.ServiceProxy('/oracle_hint', Marker)
+  oracle_service = rospy.ServiceProxy('oracle_hint', Marker)
   print("wait for oracle")
   rospy.wait_for_service('/oracle_hint')
   # definition for the subsciber on the topic /marker_publisher/detected_id

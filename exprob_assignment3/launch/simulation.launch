@@ -98,7 +98,7 @@
     <node pkg="aruco_ros" type="marker_publisher" name="marker_publisher" args="/image:=/robot/camera1/image_raw" />
     
     <!-- node armor -->
-   <!--<node pkg="armor" type="execute" name="armor_service" args="it.emarolab.armor.ARMORMainService"/>-->
+  <!-- <node pkg="armor" type="execute" name="armor_service" args="it.emarolab.armor.ARMORMainService"/> -->
    
   <!-- node for the detection of the aruco -->
     <node pkg="exprob_assignment3" type="final_oracle" name="final_oracle" output="screen"/>
