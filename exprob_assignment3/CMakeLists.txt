@@ -60,6 +60,9 @@ find_package(catkin REQUIRED COMPONENTS
  add_service_files(
    FILES
    Marker.srv
+   HintElaboration.srv
+   Complete.srv
+   Results.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -165,6 +168,7 @@ include_directories(
  catkin_install_python(PROGRAMS
    scripts/fsm.py
    scripts/hint.py
+   scripts/aruco.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 

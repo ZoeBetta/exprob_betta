@@ -50,9 +50,10 @@ from std_msgs.msg import String, Int32
 from armor_msgs.msg import * 
 from armor_msgs.srv import * 
 from exprob_assignment3.srv import Marker, MarkerResponse
-#from exprob_assignment2.srv import HintElaboration
-#from exprob_assignment2.srv import Complete,CompleteResponse
-#from exprob_assignment2.srv import Results, ResultsResponse
+from exprob_assignment3.srv import HintElaboration
+from exprob_assignment3.srv import Complete,CompleteResponse
+from exprob_assignment3.srv import Results, ResultsResponse
+
 #global variables
 people=[]
 weapons=[]
@@ -62,29 +63,6 @@ pub= None
 complcons=[]
 retrievedId=[]
 oracle_service = None
-
-##
-#	\brief 
-#	\param : 
-#	\return : 
-# 	
-#   
-#
-def newId (idtocheck):
-    global oracle_service
-    found=0
-    req=Marker()
-    for x in retrievedId:
-        if (x==idtocheck.data):
-            found=1
-    if found==0:
-        retrievedId.append(idtocheck.data)
-        if (idtocheck.data>10) and (idtocheck.data<41):
-            req=idtocheck.data
-            hint=oracle_service(req)
-            print(hint.oracle_hint)
-        else:
-            print("id out of range")
 
 ##
 #	\brief This function implements the ros node
@@ -102,22 +80,15 @@ def main():
   armor_service = rospy.ServiceProxy('armor_interface_srv', ArmorDirective)
   print('waiting for armor server')
   # waits for the service to be correctly running
-  #rospy.wait_for_service('armor_interface_srv')
-  #definition for the Client  on the topic /oracle_hint
-  oracle_service = rospy.ServiceProxy('oracle_hint', Marker)
-  print("wait for oracle")
-  rospy.wait_for_service('/oracle_hint')
-  # definition for the subsciber on the topic /marker_publisher/detected_id
-  rospy.Subscriber("/marker_publisher/detected_id", Int32, newId)
-
+  rospy.wait_for_service('armor_interface_srv')
   # definition for the Server on the topic /hint
-  #service=rospy.Service('/hint', HintElaboration, hint)
+  service=rospy.Service('/hint', HintElaboration, hint)
   # definition of the Server on the topic /checkcomplete
-  #service=rospy.Service('/checkcomplete', Complete, checkcomplete)
+  service=rospy.Service('/checkcomplete', Complete, checkcomplete)
   # definition of the Server on the topic /results
-  #service=rospy.Service('/results', Results, results)
+  service=rospy.Service('/results', Results, results)
   # definition of the publisher on the topic /complete
-  #pub = rospy.Publisher('/complete', String, queue_size=10)
+  pub = rospy.Publisher('/complete', String, queue_size=10)
   print('inizializzato tutto')
   # load the ontology from the ontology file
   load_ontology()
@@ -261,34 +232,31 @@ def hint(req):
     # check if ID is correct: not empty and not -1
     if str(req.ID)=="" or req.ID==-1:
 	    print('id wrong')
-	    return True
+	    return False
 	# check if the key is correct: not empty, not -1 and not a value different from the allowed ones
     if str(req.key)=="" or str(req.key)=='0' or str(req.key)=='-1' or (str(req.key)!='who' and str(req.key)!='what' and str(req.key)!='where'):
 	    print('key wrong')
-	    return True
+	    return False
 	# check if the value is correct: not empty, 0, -1 
     if str(req.value)=="" or str(req.value)=='0' or str(req.value)=='-1':
 	    print('value wrong')
-	    return True
+	    return False
 	# only if the hint is correct I reach this point
-	# I sace the hint on a list casting all the elements to be strings
+	# I save the hint on a list casting all the elements to be strings
     hint_received.append(str(req.ID))
     hint_received.append(str(req.key))
     hint_received.append(str(req.value))
     # uncomment if you want to print the received message
-    #print(hint_received[0])
-    #print(hint_received[1])
-    #print(hint_received[2])
-    # set the ROS parameter to the ID of the hint just received
-    rospy.set_param('ID', hint_received[0])
-    print(rospy.get_param('ID'))
-    # check if the hint was already received and so it is already saved in the ontology
+    print(hint_received[0])
+    print(hint_received[1])
+    print(hint_received[2])
+    # check if the hint was already received and so the fields are already saved in the ontology
     find=check_if_received_before(hint_received)
     # if it was never received before
     if find==0:
         # add to the ontology
         add_instance(hint_received[2],hint_received[1])
-    # check if the hint is already in the hypothesis in the ontology	    
+    # check if the hint is already in the ontology	    
     check_in_ontology(hint_received[0], hint_received[1], hint_received[2])
     return True
 
