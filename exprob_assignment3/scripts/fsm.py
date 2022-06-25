@@ -154,31 +154,34 @@ def gohome():
 def completeupdate(received):
     global complete_hyp_checked, complete_hyp_to_check, complete_available
     found=0
-    for i in complete_hyp_checked:
-        if i==received:
-            found=1
     for i in complete_hyp_to_check:
-        if i==received:
+        if i==received.data:
+            found=1
+    for i in complete_hyp_checked:
+        if i==received.data:
             found=1
     if found==0:
-        complete_hyp_to_check.append(received)
+        complete_hyp_to_check.append(int(received.data))
         complete_available=True
+        client.cancel_goal()
 
 def result():
-    global complete_hyp_checked, complete_hyp_to_check,finished, complete_available
+    global complete_hyp_checked, complete_hyp_to_check,finished, complete_available, state
     win_id=oracle_solution_service()
     print(win_id)
-    complete_hyp_checked.append(complete_hyp_to_check[0])
-    print(complete_hyp_to_check[0])
-    if int(str(complete_hyp_to_check[0]))==win_id:
-        respcall=result_service(int(str(complete_hyp_to_check[0])))
-        print("GAME FINISHED")
-        print( " %s with the %s in the %s" % (respcall.who , respcall.what ,respcall.where))
-        finished=1
-    else:
-        complete_hyp_to_check.pop(0)
-        state=0
-        complete_available=False
+    for i in complete_hyp_to_check:
+        print("hypothesis %d" %i)
+        complete_hyp_checked.append(i)
+        if i==win_id.ID:
+            respcall=result_service(i)
+            print("GAME FINISHED")
+            print( " %s with the %s in the %s" % (respcall.who , respcall.what ,respcall.where))
+            finished=1
+            return True
+        complete_hyp_to_check.remove(i)
+            
+    state=0
+    complete_available=False
          
 
 ##
