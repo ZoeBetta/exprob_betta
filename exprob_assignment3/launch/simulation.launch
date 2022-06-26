@@ -50,7 +50,7 @@
   <remap from="scan" to="/m2wr/laser/scan"/>
   
   
-    <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+    <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping">
       <param name="base_frame" value="base_link"/>
       <param name="map_update_interval" value="5.0"/>
       <param name="maxUrange" value="16.0"/>
@@ -100,6 +100,10 @@
     <!-- node armor -->
    <node pkg="armor" type="execute" name="armor_service" args="it.emarolab.armor.ARMORMainService"/> 
    
-  <!-- node for the detection of the aruco -->
+  <!-- node for the oracle implementation -->
     <node pkg="exprob_assignment3" type="final_oracle" name="final_oracle" output="screen"/>
+    
+<node name="hint"  pkg="exprob_assignment3" type="hint.py"/> 
+<node name="fsm"  pkg="exprob_assignment3" type="fsm.py" output="screen"/> 
+<node name="aruco"  pkg="exprob_assignment3" type="aruco.py"/> 
 </launch>
