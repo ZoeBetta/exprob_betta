@@ -11,10 +11,9 @@
 #  \details
 #  
 #  Subscribes to: <BR>
-#       /hint
+#       None
 #
 #  Publishes to: <BR>
-#	    /hypothesis
 #		/complete
 #
 #  Services: <BR>
@@ -29,15 +28,11 @@
 #       None
 #
 #  Description: <BR>
-#    This node receives the hints published on the topic /hint. Then it is 
-#    able to elaborate them: it check if the person, location or weapon is 
-#    already present in the ontology. In case it is not in the ontology yet
-#    it adds it. After that it checks if the hint has already been saved in
-#    the ontology, if it is the first time the hint has been received it 
-#    checks if the hypothesy that correspond to that hint ID is complete 
-#    and not inconsistent. In that case it checks if the hypothesy has 
-#    already been sent, if not it publish the hipothesy on the topic /hypothesis
-#    that is of type Hypothesis.msg. 
+#    This node implements the server that receives the hint and elaborates
+#    it saving it in the ontology, the server returns true if the hint was
+#    well formed, false otherwise. It also implements the server to check if
+#    there is at least one complete and consistent hypothesis. ALso the server that
+#    given an ID retrieves the field of the hypothesis from the ontology.
 
 import copy
 import math
@@ -145,7 +140,7 @@ def checkcomplete(req):
 	
 	
 ##
-#	\brief It checks if an hypothesis is complete and not inconsistent
+#	\brief It checks if there is at least one hypothesis complete and not inconsistent
 #	\param None
 #	\return : returns 1 if the hypothesis is complete and not inconsistent
 #    returns 0 if it is either incomplete or inconsistent.
@@ -221,7 +216,7 @@ def check_complete_consistent():
 #	\param req: the data that needs to be elaborated
 #	\return : ret a boolean to signal if the hint has been elaborated correctly
 # 	
-#	This function elaboratesthe hints received. It checks if the hint received has
+#	This function elaborates the hints received. It checks if the hint received has
 #   been received correctly or there are some missing fields. If the hint is 
 #   correct it then checks if it has already been saved in the ontology and 
 #   in case it is necessary it provides to save it
@@ -280,7 +275,7 @@ def load_ontology():
         req.secondary_command_spec= ''
         # IT IS NECESSARY TO CHANGE THE FOLLOWING LINE IF THE FILE IS NOT THERE
         # CHANGE THE FIRST ARGUMENT WITH THE CORRECT PATH
-        req.args= ['/root/ros_ws/src/exprob_assignment2/cluedo_ontology.owl', 'http://www.emarolab.it/cluedo-ontology', 'true', 'PELLET', 'true']
+        req.args= ['/root/ros_ws/src/exprob_betta/exprob_assignment3/cluedo_ontology.owl', 'http://www.emarolab.it/cluedo-ontology', 'true', 'PELLET', 'true']
         # send the message on the server
         msg = armor_service(req)
         res=msg.armor_response

@@ -2,38 +2,35 @@
 
 ## @package exprob_assignment3
 #
-#  \file planproblem.py
-#  \brief this file implements the calls to the planning server
+#  \file aruco.py
+#  \brief this file receives the hint from the aruco marker detector
 #
 #  \author Zoe Betta
 #  \version 1.0
-#  \date 21/02/2022
+#  \date 12/06/2022
 #  \details
 #  
 #  Subscribes to: <BR>
-#	 
+#  /marker_publisher/detected_id	 
 #
 #  Publishes to: <BR>
-#	 
+#	/complete_found 
 #
 #  Services: <BR>
 #    
 #  Action Services: <BR>
 #
 #  Client Services: <BR>
-#  /rosplan_problem_interface/problem_generation_server
-#  /rosplan_planner_interface/planning_server
-#  /rosplan_parsing_interface/parse_plan
-#  /rosplan_plan_dispatcher/dispatch_plan
-#  /rosplan_knowledge_base/update
+#  /oracle_hint
+#  /hint
+#  /checkcomplete
 #    
 #
 #  Description: <BR>
-#  This file implements the logic to generate the plan to control the robot.
-#  It reads the feedback from the plan before and keeps generating new plans until
-#  all the action of one are  successful. It also updates the knowedge base 
-#  depending on a ros parameter to customize the behaviour of the robot.
-
+#  This program listens for the ID retrieved from the aruco marker detector,
+#  it then calls the server that given the aruco marker returns the hint,
+#  sends the hint to the hint elaboration server and checks if a complete
+#  and consistent hypothesis is available
 
 
 import rospy
@@ -46,6 +43,8 @@ from std_msgs.msg import String, Int32, Bool
 from exprob_assignment3.srv import CompleteRequest, Complete, CompleteResponse
 import time
 import random
+
+
 #global variables
 retrievedId=[]
 oracle_service = None
@@ -54,38 +53,62 @@ complete_service=None
 pub_complete=None
 
 ##
-#	\brief 
-#	\param : 
-#	\return : 
+#	\brief this function elaborates the marker retrieved
+#	\param : idtocheck the id received from the publisher
+#	\return : None
 # 	
-#   
+#   This function implements the callback on the topic /marker_publisher/detected_id
+#   that retrieves the aruco marker detected. Once the marker is received 
+#   it is checked if the same id has already been found, in this case the function does nothing.
+#   If the id has never been received before it is checked if the ID is in the
+#   correct range. If it is in the correct range it is sent a request to the
+#   server to retrieve the hint. When the hint is retrieved it is sent
+#   a request to the server that elaborates the hints, if the server returns True 
+#   (the hint was well-formed) then we request to another server if there is at 
+#   least one complete and consistent hypothesis. If this last server returns 
+#   True a message is published on the topic /complete_found to signal 
+#   this fact. 
 #
 def newId (idtocheck):
+    # global variables
     global oracle_service, pub_complete
+    # variables initialization
     req_elab=HintElaborationRequest()
     found=0
     req=Marker()
+    # check if the id has already been found
     for x in retrievedId:
         if (x==idtocheck.data):
             found=1
+    # if it was not found before
     if found==0:
+        # add the id to the list of already seen ids
         retrievedId.append(idtocheck.data)
+        # check if the id is in the correct range
         if (idtocheck.data>10) and (idtocheck.data<41):
+            # initialize the request to the server /oracle_hint
             req=idtocheck.data
+            # call the server
             hint=oracle_service(req)
+            # debug prints
             #print(hint)
-            print(hint.oracle_hint.ID)
+            #print(hint.oracle_hint.ID)
             #print(hint.oracle_hint.key)
             #print(hint.oracle_hint.value)
+            # initialize the request to the server /hint
             req_elab.ID=hint.oracle_hint.ID
             req_elab.key=hint.oracle_hint.key
             req_elab.value=hint.oracle_hint.value
+            # request to the server /hint
             res=hint_elab_service(req_elab)
-            print(res.ret)
+            #print(res.ret)
             # if the response is true check if complete and consistent
             if res.ret:
+                # call to the server /checkcomplete
                 res_compl=complete_service(True)
+                # if the response is true
                 if res_compl.ret:
+                    # publish on the topic /complete_found
                     pub_complete.publish(True)
                 print(res_compl)     
         else:
@@ -96,27 +119,25 @@ def newId (idtocheck):
 #	\param :
 #	\return : None
 # 	
-#	This function initializes all of the needed services, then it calculates a new plan
-#   until the robot is able to fuòòy complete one. 
+#	This function initializes all of the needed services, publishers and subscribers
 def main():
     global pub_complete, active_, act_s, oracle_service, hint_elab_service, complete_service
     rospy.init_node('aruco')
     #definition for the Client  on the topic /oracle_hint
     oracle_service = rospy.ServiceProxy('oracle_hint', Marker)
-    print("wait for oracle")
     rospy.wait_for_service('/oracle_hint')
     # definition for the subsciber on the topic /marker_publisher/detected_id
     rospy.Subscriber("/marker_publisher/detected_id", Int32, newId)
     #definition for the Client  on the topic /hint
     hint_elab_service = rospy.ServiceProxy('/hint', HintElaboration)
     rospy.wait_for_service('/hint')
+    #definition for the Client  on the topic /checkcomplete
     complete_service = rospy.ServiceProxy('/checkcomplete', Complete)
     rospy.wait_for_service('/checkcomplete')
-    #I initialize the publisher for the velocity
+    #I initialize the publisher on the topic /complete_found
     pub_complete= rospy.Publisher('/complete_found', Bool, queue_size=1)
     print("server up")
     rospy.spin() 
-    print ( 'SUCCESS')
 
 if __name__ == '__main__':
     main()

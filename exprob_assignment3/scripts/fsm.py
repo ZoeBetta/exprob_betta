@@ -2,38 +2,38 @@
 
 ## @package exprob_assignment3
 #
-#  \file planproblem.py
-#  \brief this file implements the calls to the planning server
+#  \file fsm.py
+#  \brief this file implemets the finite state machine
 #
 #  \author Zoe Betta
 #  \version 1.0
-#  \date 21/02/2022
+#  \date 16/06/2022
 #  \details
 #  
 #  Subscribes to: <BR>
-#	 
+#	/complete_found 
+#   /complete
 #
 #  Publishes to: <BR>
-#	 
+#	/cmd_vel 
 #
 #  Services: <BR>
 #    
 #  Action Services: <BR>
+#   move_base
 #
 #  Client Services: <BR>
-#  /rosplan_problem_interface/problem_generation_server
-#  /rosplan_planner_interface/planning_server
-#  /rosplan_parsing_interface/parse_plan
-#  /rosplan_plan_dispatcher/dispatch_plan
-#  /rosplan_knowledge_base/update
-#    
+#   /oracle_solution
+#   /results
 #
 #  Description: <BR>
-#  This file implements the logic to generate the plan to control the robot.
-#  It reads the feedback from the plan before and keeps generating new plans until
-#  all the action of one are  successful. It also updates the knowedge base 
-#  depending on a ros parameter to customize the behaviour of the robot.
-
+#  This file implements the finite state machine algorithms that controls
+#  the behavior of the robot. The robot should move in a random room, once 
+#  it reaches the center of the room it starts a looking around behavior
+#  with the arm in two different positions. When there is something published 
+#  on the topic /complete_found this behavior stops, the robot reaches the
+#  center of the arena and calls the server to see if one of the complete 
+#  and consistent hypothesis is the  winning one
 
 
 import rospy
@@ -69,29 +69,58 @@ oracle_solution_service=None
 result_service=None
 complete_available=False
 
+
+##
+#	\brief this function implements the request to move to another room
+#	\param : None
+#	\return : None
+# 	
+#   This function implements the beahviour to decide the next room to explore
+#   and the request to the action server move_base to move there.
+#
 def gotonewroom():
+    # definition of global variables
     global finished, target, rooms, visited, counter,state
+    # initialization of local variables
     alreadyvisited=1
+    # while the random room is already one visited
     while alreadyvisited==1:
+        # put already visited to zero
         alreadyvisited=0
+        # generate another room number
         room= random.randint(0, 5)
-        print(room)
+        # debug print
+        #print(room)
+        # check if the new room id has already been visited
         for i in visited:
              if i==room:
                  alreadyvisited=1
+    # when one id is of one room that has not been visited
+    # set the request for the move_abse action server
     target.target_pose.pose.position.x=rooms[room][0]
     target.target_pose.pose.position.y=rooms[room][1]
+    # send the request to the move_base action server
     client.send_goal(target)
-    print(target)
-    print("msg sent")
+    #print(target)
+    #print("msg sent")
+    # wait for the robot to reach the room
     client.wait_for_result()
+    # add the room to the list of visited
     visited.append(room)
-    counter=counter+1
+    # if all rooms are visited reset the visited list
     if len(visited)== 6:
         print("all rooms visited")
         visited.clear()
+    # change to state 1: move around
     state=1
 
+##
+#	\brief 
+#	\param : 
+#	\return : 
+# 	
+#   
+#
 def movearound():
     global pub_,state, up 
     print("move")
@@ -107,6 +136,13 @@ def movearound():
     else:
         state=2
 
+##
+#	\brief 
+#	\param : 
+#	\return : 
+# 	
+#   
+#
 def moveup():
     global move_group, up, state
     print('moveup')
@@ -121,6 +157,13 @@ def moveup():
     state=1
     up=True
 
+##
+#	\brief 
+#	\param : 
+#	\return : 
+# 	
+#   
+#
 def movedown():
     global move_group, up ,state
     print('movedown')
@@ -134,8 +177,16 @@ def movedown():
     # Calling ``stop()`` ensures that there is no residual movement
     #move_group.stop()
     state=0
+#	This function initializes all of the needed services
     up=False
 
+##
+#	\brief 
+#	\param : 
+#	\return : 
+# 	
+#   
+#
 def complete(rec):
     global pub_, state
     vel=Twist()
@@ -143,6 +194,13 @@ def complete(rec):
     pub_.publish(vel)
     state=4
 
+##
+#	\brief 
+#	\param : 
+#	\return : 
+# 	
+#   
+#
 def gohome():
     target.target_pose.pose.position.x=0
     target.target_pose.pose.position.y=-1
@@ -151,6 +209,13 @@ def gohome():
     print("msg sent")
     client.wait_for_result()
 
+##
+#	\brief 
+#	\param : 
+#	\return : 
+# 	
+#   
+#
 def completeupdate(received):
     global complete_hyp_checked, complete_hyp_to_check, complete_available
     found=0
@@ -165,6 +230,13 @@ def completeupdate(received):
         complete_available=True
         client.cancel_goal()
 
+##
+#	\brief 
+#	\param : 
+#	\return : 
+# 	
+#   
+#
 def result():
     global complete_hyp_checked, complete_hyp_to_check,finished, complete_available, state
     win_id=oracle_solution_service()
