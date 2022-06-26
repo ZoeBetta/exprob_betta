@@ -14,11 +14,13 @@
 #  /marker_publisher/detected_id	 
 #
 #  Publishes to: <BR>
-#	/complete_found 
+#	None
 #
 #  Services: <BR>
-#    
+#    None
+#
 #  Action Services: <BR>
+#  None
 #
 #  Client Services: <BR>
 #  /oracle_hint
@@ -65,9 +67,7 @@ pub_complete=None
 #   server to retrieve the hint. When the hint is retrieved it is sent
 #   a request to the server that elaborates the hints, if the server returns True 
 #   (the hint was well-formed) then we request to another server if there is at 
-#   least one complete and consistent hypothesis. If this last server returns 
-#   True a message is published on the topic /complete_found to signal 
-#   this fact. 
+#   least one complete and consistent hypothesis. 
 #
 def newId (idtocheck):
     # global variables
@@ -106,10 +106,6 @@ def newId (idtocheck):
             if res.ret:
                 # call to the server /checkcomplete
                 res_compl=complete_service(True)
-                # if the response is true
-                if res_compl.ret:
-                    # publish on the topic /complete_found
-                    pub_complete.publish(True)
                 print(res_compl)     
         else:
             print("id out of range")
@@ -134,8 +130,6 @@ def main():
     #definition for the Client  on the topic /checkcomplete
     complete_service = rospy.ServiceProxy('/checkcomplete', Complete)
     rospy.wait_for_service('/checkcomplete')
-    #I initialize the publisher on the topic /complete_found
-    pub_complete= rospy.Publisher('/complete_found', Bool, queue_size=1)
     print("server up")
     rospy.spin() 
 

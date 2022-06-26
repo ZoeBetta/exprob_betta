@@ -1,3 +1,35 @@
+/** @ package exprob_assignment3
+* 
+*  \file simulation.cpp
+*  \brief implements the oracle
+*
+*  \author Zoe Betta
+*  \version 1.0
+*  \date 12/06/2022
+*  \details
+*   
+*  Subscribes to: <BR>
+*	None
+*
+*  Publishes to: <BR>
+*	 None
+*
+*  Services: <BR>
+*    /oracle_hint
+*    /oracle_solution
+* 
+*   Client Services: <BR>
+*   None
+*    
+*  Action Services: <BR>
+*    None
+*
+*  Description: <BR>
+*  This program implements the oracle Node. It was provided by Professor
+*  Carmine Recchiuto in the github repository https://github.com/CarmineD8/exp_assignment3/
+* . I didn't change it
+*/
+
 #include <ros/ros.h>
 #include <erl2/ErlOracle.h>
 #include <erl2/Oracle.h>
