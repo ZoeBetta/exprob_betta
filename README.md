@@ -49,6 +49,34 @@ The following picture shows the Rviz interface:
 
 We can notice that on the left we have both the planning interface of moveit and the camera stream to see what the camera is recording. On the right instead we have the robot in the environment. We can see the map that is being built with the move_base algorithm that is based on SLAM and the global path the robot is plannign to follow to reach the desired position.
 
+The hints are formed of three fields: who, what, where.  
+The possible values that the person can have are: 
+* missScarlett
+* colonelMustard
+* mrsWhite
+* mrGreen
+* mrsPeacock
+* profPlum
+
+The possible values that the weapon can have are:
+* candlestick
+* dagger
+* leadPipe
+* revolver
+* rope
+* spanner
+
+The possible values that the location can have are:
+* conservatory
+* lounge
+* kitchen
+* library
+* hall
+* study
+* bathroom
+* diningRoom
+* billiardRoom
+
 # Working Hypothesis
 The architecture is very flexible and also it tries to use as little computational power as possible since the package used are already big. The flexibility is obtained by dividing in three nodes all the parts of the architecture: one node to communicate with the aruco detection package, one node to communicate with the ontology and one node that implements the state machine. If there is the need to change one part of this architecture, for example the hint is not retrieved by aruco anymore but it is retrieved through a proximity sensor, for example, it would be sufficent to change the node that implements the interface with the aruco_ros package. For what concerns the computational power I delayed the update of the map and I decided to do as little computation as possible in the code I implemented. 
 
